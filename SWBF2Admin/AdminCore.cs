@@ -32,6 +32,7 @@ using SWBF2Admin.Runtime.Game;
 using SWBF2Admin.Runtime.Announce;
 using SWBF2Admin.Runtime.Commands;
 using SWBF2Admin.Runtime.ApplyMods;
+using SWBF2Admin.Runtime.Watchdog;
 
 using SWBF2Admin.Plugins;
 
@@ -118,6 +119,11 @@ namespace SWBF2Admin
                 components.Add(Game);
                 components.Add(Commands);
                 components.Add(Mods);
+
+                if (Config.EnableEmptyRestart)
+                {
+                    components.Add(new EmptyRestart(this));
+                }
             }
 
             Scheduler.TickDelay = Config.TickDelay;
@@ -177,6 +183,7 @@ namespace SWBF2Admin
             foreach (ComponentBase h in components) h.OnDeInit();
         }
 
+
         #region "Events"
         private void Server_Started(object sender, EventArgs e)
         {
@@ -194,14 +201,25 @@ namespace SWBF2Admin
                 }
             }, config.RuntimeStartDelay);
         }
+
         private void Server_Stopped(object sender, EventArgs e)
         {
             Logger.Log(LogLevel.Verbose, "Stopping runtime management...");
             foreach (ComponentBase h in components) h.OnServerStop();
+            if (e != null)
+            {
+                var se = (StopEventArgs)e;
+                if (se.Reason == ServerStopReason.STOP_RESTART)
+                {
+                    Logger.Log(LogLevel.Verbose, "Restarting server...");
+                    Server.Start();
+                }
+           }
         }
+
         private void Server_Crashed(object sender, EventArgs e)
         {
-            Server_Stopped(sender, e);
+            Server_Stopped(sender, null);
             if (Config.AutoRestartServer)
             {
                 Logger.Log(LogLevel.Info, "Automatic restart is enabled. Restarting server...");
@@ -213,6 +231,7 @@ namespace SWBF2Admin
         {
 
         }
+
         private void Rcon_Chat(object sender, EventArgs e)
         {
 
