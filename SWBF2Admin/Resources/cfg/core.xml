@@ -73,6 +73,13 @@
   <CommandEnableDynamic>true</CommandEnableDynamic>
 
   <!--
+    Enable memory reader to use things such as Process Mods or stat injections.
+    CAUTION:
+      Will cause crashes if process mods are used improperly. Currently, stat injection only supported for GoG version of server.
+  -->
+  <EnableMemoryReader>false</EnableMemoryReader>
+
+  <!--
     SQL-database type:
     Available options:
     - SQLite (default)

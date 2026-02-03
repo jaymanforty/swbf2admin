@@ -18,6 +18,11 @@ namespace SWBF2Admin.Structures.InGame
         /// <returns>The score of the character.</returns>
         public static Character GetCharacter(int index, ProcessMemoryReader reader)
         {
+            if (reader == null)
+            {
+                return null;
+            }
+
             IntPtr tablePtr = GetCharTableBase(reader);
             if (tablePtr == IntPtr.Zero)
             {

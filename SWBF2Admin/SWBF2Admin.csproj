@@ -368,7 +368,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\cfg\mods.aspyr.xml" />
+    <EmbeddedResource Include="Resources\cfg\mods.aspyr.xml" />
     <EmbeddedResource Include="Resources\cfg\process_mods.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -125,7 +125,11 @@ namespace SWBF2Admin
                 components.Add(Game);
                 components.Add(Commands);
                 components.Add(Mods);
-                components.Add(BF2);
+
+                if (Config.EnableMemoryReader)
+                {
+                    components.Add(BF2);
+                }
 
                 if (Config.EnableEmptyRestart)
                 {

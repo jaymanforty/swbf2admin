@@ -67,8 +67,12 @@ namespace SWBF2Admin.Runtime.Players
             {
                 foreach (Player p in plp.PlayerList)
                 {
-                    Character c = CharacterUtils.GetCharacter(p.Slot - 1, Core.BF2.reader);
-                    p.Character = c;
+                    //TODO: CC and Steam stat injection support
+                    if (Core.Config.ServerType == GameserverType.GoG && Core.Config.EnableMemoryReader)
+                    {
+                        Character c = CharacterUtils.GetCharacter(p.Slot - 1, Core.BF2.reader);
+                        p.Character = c;
+                    }
 
                     if (playerList != null)
                     {
@@ -79,7 +83,11 @@ namespace SWBF2Admin.Runtime.Players
                             OnNewPlayerJoin(p);
 
                             //Attach stats if they exist in the current game already
-                            if (Core.Game.LatestGame != null && config.PlayerReconnect)
+                            //TODO: CC and Steam stat injection support
+                            if (Core.Game.LatestGame != null && 
+                                config.PlayerReconnect && 
+                                Core.Config.ServerType == GameserverType.GoG &&
+                                Core.Config.EnableMemoryReader == true)
                             {
                                 PlayerStatistics stat = Core.Database.GetPlayerMatchStats(p, Core.Game.LatestGame);
 
@@ -113,6 +121,7 @@ namespace SWBF2Admin.Runtime.Players
                 }
 
                 playerList = plp.PlayerList;
+
                 ProcessPendingInjections();
             }
         }
@@ -220,7 +229,11 @@ namespace SWBF2Admin.Runtime.Players
                 if (p.Team != "Non")
                 {
                     Core.Database.InsertPlayerStats(p, Core.Game.LatestGame, true);
-                    Core.Database.InsertPlayerStatsExtra(p, Core.Game.LatestGame, true);
+
+                    if (p.Character != null)
+                    {
+                        Core.Database.InsertPlayerStatsExtra(p, Core.Game.LatestGame, true);
+                    }
                 }
             }
         }
@@ -238,7 +251,11 @@ namespace SWBF2Admin.Runtime.Players
                 {
                     GameClosedEventArgs gce = (GameClosedEventArgs)e;
                     Core.Database.InsertPlayerStats(p, gce.Game);
-                    Core.Database.InsertPlayerStatsExtra((Player)p, gce.Game);
+
+                    if (p.Character != null)
+                    {
+                        Core.Database.InsertPlayerStatsExtra(p, Core.Game.LatestGame, true);
+                    }
                 }
             }
         }
