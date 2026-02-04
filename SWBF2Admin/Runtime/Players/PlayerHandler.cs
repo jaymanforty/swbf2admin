@@ -252,7 +252,7 @@ namespace SWBF2Admin.Runtime.Players
                     GameClosedEventArgs gce = (GameClosedEventArgs)e;
                     Core.Database.InsertPlayerStats(p, gce.Game);
 
-                    if (p.Character != null)
+                    if (p.Character != null && p.Team != "Non")
                     {
                         Core.Database.InsertPlayerStatsExtra(p, Core.Game.LatestGame, true);
                     }
