@@ -305,47 +305,66 @@ void bf2server_patch_spawnvalue()
 
 void bf2server_patch_netupdate()
 {
-    // Configure IsSendWindowOpen to resend
-    // faster on dropped packet
-    BYTE send_window_patch[] = {
-            //0F 86 9C 00 00 00 -> 90 90 90 90 90 90
-            0x90, 0x90,0x90, 0x90,0x90, 0x90
-    };
+	// Stop render(i think) call in netcodemainfunc
+	BYTE render_patch[] = {
+		//E8 11 A8 18 00
+		0x90, 0x90, 0x90, 0x90, 0x90
+	};
+	bf2server_patch_asm(0x1338FA,
+		reinterpret_cast<void*>(render_patch), sizeof(render_patch));
 
-    bf2server_patch_asm(0x005D30FB-0x400000,
-                        reinterpret_cast<void*>(send_window_patch),
-                        sizeof(send_window_patch));
 
-    // Remote per Client outbound bandwidth limiter
-    BYTE pipe_full_patch[] = {
-            //EB 80 -> 90 90
-            0x90, 0x90
-    };
+	// Window sleep 10ms > 0ms patch
+	// If window loses focus for some reason it starts sleeping and throttles UPS
+	BYTE window_sleep_patch[] = {
+		// push 0x0A -> push 0x00
+		0x6A, 0x00
+	};
+	bf2server_patch_asm(0x218B03,
+		reinterpret_cast<void*>(window_sleep_patch), sizeof(window_sleep_patch));
 
-    bf2server_patch_asm(0x005C9D2F-0x400000,
-                        reinterpret_cast<void*>(pipe_full_patch),
-                        sizeof(pipe_full_patch));
 
-    // set next update timestamp in SentUpdate so we
-    // can immediately tx in next server tick
-    BYTE send_update_patch[] = {
-            //03 4D E8 -> 81 C1 01
-            0x83, 0xC1, 0x01
-    };
+	// Configure IsSendWindowOpen to resend
+	// faster on dropped packet
+	BYTE send_window_patch[] = {
+		//0F 86 9C 00 00 00 -> 90 90 90 90 90 90
+		0x90, 0x90,0x90, 0x90,0x90, 0x90
+	};
 
-    bf2server_patch_asm(0x005D2E8F-0x400000,
-                        reinterpret_cast<void*>(send_update_patch),
-                        sizeof(send_update_patch));
+	bf2server_patch_asm(0x005D30FB - 0x400000,
+		reinterpret_cast<void*>(send_window_patch),
+		sizeof(send_window_patch));
 
-    BYTE cur_players_patch[] = {
-            //cdq
-            //sub eax, edx
-            //sar eax, 1
-            //-> mov eax, 0x40
-            0xb8, 0x40, 0x00, 0x00, 0x00
-    };
-    *(DWORD*)&cur_players_patch[1] = 1024;
-    bf2server_patch_asm(OFFSET_UPS_CLIENT_LIMITER, cur_players_patch, sizeof(cur_players_patch));
+	// Remote per Client outbound bandwidth limiter
+	BYTE pipe_full_patch[] = {
+		//EB 80 -> 90 90
+		0x90, 0x90
+	};
+
+	bf2server_patch_asm(0x005C9D2F - 0x400000,
+		reinterpret_cast<void*>(pipe_full_patch),
+		sizeof(pipe_full_patch));
+
+	// set next update timestamp in SentUpdate so we
+	// can immediately tx in next server tick
+	BYTE send_update_patch[] = {
+		//03 4D E8 -> 81 C1 01
+		0x83, 0xC1, 0x01
+	};
+
+	bf2server_patch_asm(0x005D2E8F - 0x400000,
+		reinterpret_cast<void*>(send_update_patch),
+		sizeof(send_update_patch));
+
+	BYTE cur_players_patch[] = {
+		//cdq
+		//sub eax, edx
+		//sar eax, 1
+		//-> mov eax, 0x40
+		0xb8, 0x40, 0x00, 0x00, 0x00
+	};
+	*(DWORD*)&cur_players_patch[1] = 1024;
+	bf2server_patch_asm(OFFSET_UPS_CLIENT_LIMITER, cur_players_patch, sizeof(cur_players_patch));
 
 }
 
